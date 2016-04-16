@@ -4,8 +4,8 @@ PROGRAM Verification
 
     IMPLICIT NONE
 
-    REAL(8), PARAMETER :: EPS=1E-5
-    INTEGER, PARAMETER :: Steps = 20
+    REAL(8), PARAMETER :: EPS=1E-6
+    INTEGER, PARAMETER :: Steps = 100
     INTEGER :: iStep
     REAL(8) :: x(NDIM), y(NDIM), history(NDIM,Steps+1), s(1)
     REAL(8) :: dJds_fd, dJds_adj
@@ -36,6 +36,7 @@ PROGRAM Verification
         CALL Adjoint(x, y, s)
     END DO
 
-    PRINT *, dJds_fd, dJds_adj
+    PRINT *, dJds_fd
+    PRINT *, dJds_adj
 
 END PROGRAM

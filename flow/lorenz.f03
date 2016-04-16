@@ -30,7 +30,7 @@ SUBROUTINE Adjoint(x, y, s)
     REAL(8), INTENT(inout) :: y(3)
     REAL(8), INTENT(in) :: s(1)
 
-    REAL(8) :: dy(3), yb(3)
+    REAL(8) :: dy(3)
     dy(1) = -10 * y(1) + (s(1) - x(3)) * y(2) + x(2) * y(3)
     dy(2) = 10 * y(1) - y(2) + x(1) * y(3)
     dy(3) = -x(1) * y(2) - 8./3 * y(3)

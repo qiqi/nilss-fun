@@ -24,8 +24,10 @@ def adjoint(t_strt,t_end,w_end,rhs=0):
     call(["./adj",str(t_end),str(t_strt),str(rhs)])
     with open('output.bin', 'rb') as f:
         w = frombuffer(f.read(), dtype='>d')
+    with open('dxdt.bin', 'rb') as f:
+        dxdt = frombuffer(f.read(), dtype='>d')
     g = loadtxt("grad.txt")
-    return w,g
+    return w,g,dxdt
 
 # system size (# of DoF)
 def get_fun3d_dof():
@@ -37,7 +39,7 @@ def get_fun3d_dof():
 
 n = get_fun3d_dof()
 print n
-n = 3
+n = 2
 
 # compute check points
 t_chkpts = m0 + dm * arange(K+1)
@@ -66,18 +68,32 @@ h = 0.0
 wh = random.rand(n)
 wh = hstack([wh, wh])
 
+dXdt = zeros([2*n,p])
+
+_, _, dxdt = adjoint(t_chkpts[K],t_chkpts[K],wh)
+
 for i in range(K-1,-1,-1):
     t_strt = t_chkpts[i]
     t_end = t_chkpts[i+1]
     print "segment {0}: [{1},{2}]".format(str(i), t_strt, t_end)
 
+    dxdt_normalized = dxdt / linalg.norm(dxdt)
+    P = eye(2*n) - outer(dxdt_normalized, dxdt_normalized)
+    W = dot(P, W)
+    wh = dot(P, wh)
+
     # solve homogeneous adjoints
     for j in range(p):
-        W[:,j], gs[i,j] = adjoint(t_strt,t_end,W[:,j])
+        W[:,j], gs[i,j], _ = adjoint(t_strt,t_end,W[:,j])
 
     # solve inhomogeneous adjoint
-    wh, hi = adjoint(t_strt,t_end,wh,1)
+    wh, hi, dxdt = adjoint(t_strt,t_end,wh,1)
     h = h + hi
+
+    dxdt_normalized = dxdt / linalg.norm(dxdt)
+    P = eye(2*n) - outer(dxdt_normalized, dxdt_normalized)
+    W = dot(P, W)
+    wh = dot(P, wh)
 
     # QR decomposition
     [Q,R] = linalg.qr(W)
