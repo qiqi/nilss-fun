@@ -5,6 +5,9 @@ lorenz:
 	gfortran finite-diff.f03 lorenz.o -o finite-diff
 	gfortran adj.f03 lorenz.o -o adj
 	mv adj ../adj/
+	echo 3 > n
+	./verify
+	./finite-diff > fd.txt
 
 vanderpol:
 	gfortran -c vanderpol.f03
@@ -13,3 +16,6 @@ vanderpol:
 	gfortran finite-diff.f03 vanderpol.o -o finite-diff
 	gfortran adj.f03 vanderpol.o -o adj
 	mv adj ../adj/
+	echo 2 > n
+	./verify
+	./finite-diff > fd.txt

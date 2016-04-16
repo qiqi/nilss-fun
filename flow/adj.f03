@@ -28,7 +28,7 @@ PROGRAM Adj
     Read(arg, '(i10)') objective
 
     Open(1, file="../flow/solution.bin", form="unformatted", access="stream", &
-            status="old")
+            status="old", convert='big_endian')
     Read(1) history
     Close(1)
 
@@ -82,16 +82,16 @@ PROGRAM Adj
     ! end if
 
     Open(1, file="output.bin",form="unformatted",access="stream", &
-         convert='big_endian')
+         status='replace', convert='big_endian')
     Write(1) y
     Close(1)
 
     Open(1, file="dxdt.bin",form="unformatted",access="stream", &
-         convert='big_endian')
+         status='replace', convert='big_endian')
     Write(1) dxdt
     Close(1)
 
-    Open(1, file="grad.txt",form="formatted",access="stream")
+    Open(1, file="grad.txt",form="formatted",access="stream", status='replace')
     Write(1, *) grad
     Close(1)
 

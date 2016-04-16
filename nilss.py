@@ -18,7 +18,16 @@ K = 10
 p = 2
 # ====================== time horizon parameters ============================= #
 
+def primal():
+    os.chdir('flow')
+    call(["./flow"])
+    with open('objective.bin', 'rb') as f:
+        J = frombuffer(f.read(), dtype='>d')
+    os.chdir('..')
+    return J
+
 def adjoint(t_strt,t_end,w_end,rhs=0):
+    os.chdir('adj')
     with open('input.bin', 'wb') as f:
         f.write(asarray(w_end, dtype='>d').tobytes())
     call(["./adj",str(t_end),str(t_strt),str(rhs)])
@@ -27,6 +36,7 @@ def adjoint(t_strt,t_end,w_end,rhs=0):
     with open('dxdt.bin', 'rb') as f:
         dxdt = frombuffer(f.read(), dtype='>d')
     g = loadtxt("grad.txt")
+    os.chdir('..')
     return w,g,dxdt
 
 # system size (# of DoF)
@@ -38,15 +48,14 @@ def get_fun3d_dof():
     return n * 5
 
 n = get_fun3d_dof()
-print n
-n = 2
+n = int(open('flow/n').read())
 
 # compute check points
 t_chkpts = m0 + dm * arange(K+1)
 
 # run primal
-os.chdir("flow/")
-call("./flow")
+J = primal()
+J_mean = J[m0:m0+dm*K].mean()
 
 # Set Adjoint Terminal Conditions
 #random.seed(12)
@@ -57,8 +66,6 @@ W = QT
 
 # Loop over all time segments, solve p homogeneous and 1 inhomogeneous
 # adjoint on each
-
-os.chdir("../adj/")
 
 RTs = zeros([K,p,p])
 bs = zeros([K+1,p])
@@ -71,7 +78,6 @@ wh = hstack([wh, wh])
 dXdt = zeros([2*n,p])
 
 _, _, dxdt = adjoint(t_chkpts[K],t_chkpts[K],wh)
-
 for i in range(K-1,-1,-1):
     t_strt = t_chkpts[i]
     t_end = t_chkpts[i+1]
@@ -80,7 +86,7 @@ for i in range(K-1,-1,-1):
     dxdt_normalized = dxdt / linalg.norm(dxdt)
     P = eye(2*n) - outer(dxdt_normalized, dxdt_normalized)
     W = dot(P, W)
-    wh = dot(P, wh)
+    wh = dot(P, wh) - (J[t_strt] - J_mean) * dxdt / dot(dxdt, dxdt)
 
     # solve homogeneous adjoints
     for j in range(p):
@@ -93,7 +99,7 @@ for i in range(K-1,-1,-1):
     dxdt_normalized = dxdt / linalg.norm(dxdt)
     P = eye(2*n) - outer(dxdt_normalized, dxdt_normalized)
     W = dot(P, W)
-    wh = dot(P, wh)
+    wh = dot(P, wh) + (J[t_strt] - J_mean) * dxdt / dot(dxdt, dxdt)
 
     # QR decomposition
     [Q,R] = linalg.qr(W)
@@ -105,8 +111,6 @@ for i in range(K-1,-1,-1):
     wh = wh - dot(Q, bs[i,:])
 
     # print R, bs[i,:], wh
-
-os.chdir("..")
 
 # form KKT system and solve
 d = ones(K)
@@ -131,7 +135,10 @@ plt.show()
 alpha = splinalg.spsolve(A, rhs)
 
 # compute sensitivities
-grad = dot(alpha,ravel(gs)) + h
+T = 10
+grad = (dot(alpha,ravel(gs)) + h) / T
+print(grad)
 
-print grad
-
+v = loadtxt('flow/fd.txt')
+plot(v[:,0], v[:,1], 'o')
+plot([v[0,0], v[0,0] + 1], [v[0,1], v[0,1] + grad], '-')

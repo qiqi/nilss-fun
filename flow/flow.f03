@@ -18,7 +18,13 @@ PROGRAM Flow
         CALL Step(x, s)
     END DO
 
-    Open(1, file="solution.bin", form="unformatted", access="stream")
+    Open(1, file="objective.bin", form="unformatted", access="stream", &
+         convert='big_endian')
+    Write(1) history(NDIM,:)
+    Close(1)
+
+    Open(1, file="solution.bin", form="unformatted", access="stream", &
+         convert='big_endian')
     Write(1) history
     Close(1)
 
