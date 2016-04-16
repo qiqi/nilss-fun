@@ -21,7 +21,7 @@ p = 2
 def adjoint(t_strt,t_end,w_end,rhs=0):
     with open('input.bin', 'wb') as f:
         f.write(asarray(w_end, dtype='>d').tobytes())
-    call(["./a.out",str(t_end),str(t_strt),str(rhs)])
+    call(["./adj",str(t_end),str(t_strt),str(rhs)])
     with open('output.bin', 'rb') as f:
         w = frombuffer(f.read(), dtype='>d')
     g = loadtxt("grad.txt")
@@ -44,7 +44,7 @@ t_chkpts = m0 + dm * arange(K+1)
 
 # run primal
 os.chdir("flow/")
-call("./a.out")
+call("./flow")
 
 # Set Adjoint Terminal Conditions
 #random.seed(12)

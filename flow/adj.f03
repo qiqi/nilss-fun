@@ -1,15 +1,16 @@
-PROGRAM LorenzAdj
+PROGRAM Adj
+
+    USE Equations
+
     IMPLICIT NONE
 
-    INTEGER, PARAMETER :: nSteps = 100000
-    REAL(8), PARAMETER :: DT = 0.001
     INTEGER :: iStep, nStep0, nStep1, objective
-    REAL(8) :: y(2,2), history(2,nSteps), s(1), dxdt(2), dxdt_normalized(2)
-    REAL(8) :: adj_history(2,nSteps)
+    REAL(8) :: y(3,2), history(3,nSteps), s(1), dxdt(3), dxdt_normalized(3)
+    REAL(8) :: adj_history(3,nSteps)
     CHARACTER(len=128) :: arg
     REAL(8) :: zAvg, z, grad
 
-    s = (/0.0/)
+    s = (/28.0/)
 
     if (command_argument_count() .ne. 3) then
         print *, "Need 3 arguments"
@@ -52,10 +53,14 @@ PROGRAM LorenzAdj
     ! Run adjoint backwards
     grad = 0.0
     DO iStep = nStep1-1, nStep0, -1
-        CALL Adjoint(history(:, iStep), y(:,1), y(:,2), s)
+        grad = grad + gradContribution(history(1,iStep), y(:,1), s)
+        grad = grad + gradContribution(history(1,iStep), y(:,2), s)
+        CALL Adjoint2P(history(:, iStep), y(:,1), y(:,2), s)
         adj_history(:,iStep) = y(:,1)
-        grad = grad + history(1,iStep) * y(2,1) * DT ! sensitivity to r
-        if (objective .ne. 0) y(2,1) = y(2,1) + DT * 1.5
+        if (objective .ne. 0) then
+            y(3,1) = y(3,1) + DT / 2
+            y(3,2) = y(3,1) + DT / 2
+        end if
     END DO
     
     ! Add time dilation contribution
@@ -82,20 +87,12 @@ PROGRAM LorenzAdj
     ! Close(1)
 
 CONTAINS
-
-SUBROUTINE Adjoint(x, y, yf, s)
-    IMPLICIT NONE
-    REAL(8), INTENT(in) :: x(2)
-    REAL(8), INTENT(inout) :: y(2), yf(2)
-    REAL(8), INTENT(in) :: s(1)
-
-    REAL(8) :: dy(2), yb(2)
-    ! dy(1) = -10 * y(1) + (s(1) - x(3)) * y(2) + x(2) * y(3)
-    ! dy(2) = 10 * y(1) - y(2) + x(1) * y(3)
-    yb = 0.5 * (y + yf) + 1.5 * DT * dy
-    yf = y
-    y = yb
-END SUBROUTINE
-
-
+    SUBROUTINE Adjoint2P(x, y, yf, s)
+        IMPLICIT NONE
+        REAL(8), INTENT(in) :: x(3)
+        REAL(8), INTENT(inout) :: y(3), yf(3)
+        REAL(8), INTENT(in) :: s(1)
+        CALL Adjoint(x, y, s)
+        CALL Adjoint(x, yf, s)
+    END SUBROUTINE
 END PROGRAM
