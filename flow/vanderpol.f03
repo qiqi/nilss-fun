@@ -4,7 +4,7 @@ MODULE Equations
     REAL(8), PARAMETER :: DT = 0.001
     INTEGER, PARAMETER :: nSteps = 100000
     INTEGER, PARAMETER :: NDIM = 2
-    REAL, PARAMETER :: S0(1) = (/-1.0/)
+    REAL, PARAMETER :: S0(1) = (/-0.5/)
     REAL, PARAMETER :: X0(NDIM) = (/1.0,1.0/)
 
     CONTAINS

@@ -5,7 +5,7 @@ MODULE Equations
     INTEGER, PARAMETER :: nSteps = 100000
     INTEGER, PARAMETER :: NDIM = 3
     REAL, PARAMETER :: S0(1) = (/28.0/)
-    REAL, PARAMETER :: X0(NDIM) = (/1.0,1.0,1.0/)
+    REAL, PARAMETER :: X0(NDIM) = (/1.0,1.0,28.0/)
 
     CONTAINS
 

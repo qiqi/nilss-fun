@@ -9,11 +9,13 @@ import scipy.sparse.linalg as splinalg
 
 # ====================== time horizon parameters ============================= #
 ## time horizon start
-m0 = 10000
+m0 = 15000
 ## time segment size
-dm = 1000
+dm = 2000
 ## number of time segments
-K = 10
+K = 40
+## total time
+dT = dm * 0.001
 # number of homogeneous adjoints
 p = 2
 # ====================== time horizon parameters ============================= #
@@ -70,7 +72,7 @@ W = QT
 RTs = zeros([K,p,p])
 bs = zeros([K+1,p])
 gs = zeros([K,p])
-h = 0.0
+h = zeros(K)
 
 wh = random.rand(n)
 wh = hstack([wh, wh])
@@ -94,12 +96,12 @@ for i in range(K-1,-1,-1):
 
     # solve inhomogeneous adjoint
     wh, hi, dxdt = adjoint(t_strt,t_end,wh,1)
-    h = h + hi
+    h[i] = hi
 
     dxdt_normalized = dxdt / linalg.norm(dxdt)
     P = eye(2*n) - outer(dxdt_normalized, dxdt_normalized)
     W = dot(P, W)
-    wh = dot(P, wh) + (J[t_strt] - J_mean) * dxdt / dot(dxdt, dxdt)
+    wh = dot(P, wh) # + (J[t_strt] - J_mean) * dxdt / dot(dxdt, dxdt)
 
     # QR decomposition
     [Q,R] = linalg.qr(W)
@@ -132,13 +134,20 @@ plt.spy(A)
 plt.show()
 '''
 
-alpha = splinalg.spsolve(A, rhs)
+alpha = splinalg.spsolve(A, rhs).reshape([K,-1])
 
 # compute sensitivities
-T = 10
-grad = (dot(alpha,ravel(gs)) + h) / T
-print(grad)
+grad = ((alpha * gs).sum(1) + h) / dT
 
-v = loadtxt('flow/fd.txt')
-plot(v[:,0], v[:,1], 'o')
-plot([v[0,0], v[0,0] + 1], [v[0,1], v[0,1] + grad], '-')
+i = array(around(linspace(0, K, 4)), int)
+grads = array([grad[i0:i1].mean() for i0, i1 in zip(i[:-1], i[1:])])
+print('{0} +- {1}]'.format(grad.mean(), 2 * grads.std() / sqrt(3-1)))
+
+try:
+    v = loadtxt('flow/fd.txt')
+    plot(v[:,0], v[:,1], 'o')
+    plot([v[0,0], v[0,0] + 1], [v[0,1], v[0,1] + grad.mean()], '-')
+    figure()
+    plot(grad, 'o')
+except:
+    pass
