@@ -3,6 +3,7 @@ import struct
 from subprocess import *
 
 import f90nml
+from pylab import *
 from numpy import *
 from scipy import sparse
 import scipy.sparse.linalg as splinalg
@@ -49,7 +50,7 @@ def get_fun3d_dof():
         n = struct.unpack('>I', f.read(4))[0]
     return n * 5
 
-n = get_fun3d_dof()
+#n = get_fun3d_dof()
 n = int(open('flow/n').read())
 
 # compute check points
@@ -147,7 +148,8 @@ try:
     v = loadtxt('flow/fd.txt')
     plot(v[:,0], v[:,1], 'o')
     plot([v[0,0], v[0,0] + 1], [v[0,1], v[0,1] + grad.mean()], '-')
-    figure()
-    plot(grad, 'o')
+    # figure()
+    # plot(grad, 'o')
+    show()
 except:
     pass

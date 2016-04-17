@@ -1,5 +1,8 @@
-lorenz:
+lorenz:	adj
 	cd flow; make lorenz
 
-vanderpol:
+vanderpol:	adj
 	cd flow; make vanderpol
+
+adj:
+	mkdir adj
